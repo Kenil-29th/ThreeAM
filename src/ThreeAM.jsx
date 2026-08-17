@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import sceneImage from "./assets/scene.jpg";
+import sceneImage from "./assets/scene.png";
 import useYouTubePlayer from "./hooks/useYouTubePlayer";
 import useSupabasePresence from "./hooks/useSupabasePresence";
 
@@ -75,7 +75,7 @@ export default function ThreeAM() {
         .three-am-root {
           min-height: 100dvh;
           width: 100%;
-          background: radial-gradient(120% 90% at 50% 0%, ${COLORS.violet} 0%, ${COLORS.midnight} 55%, #060814 100%);
+          background: ${COLORS.midnight};
           color: ${COLORS.paper};
           font-family: 'Inter', sans-serif;
           position: relative;
@@ -92,16 +92,14 @@ export default function ThreeAM() {
           display: flex;
           flex-direction: column;
           box-sizing: border-box;
+          justify-content: flex-end;
         }
 
         .scene-container {
-          position: relative;
-          flex: 1;
-          margin: 10px 0;
-          border-radius: 16px;
+          position: absolute;
+          inset: 0;
+          z-index: 0;
           overflow: hidden;
-          min-height: 0;
-          box-shadow: 0 30px 80px -30px rgba(0,0,0,.7), inset 0 0 0 1px rgba(255,255,255,.05);
         }
 
         .title-section h1 {
@@ -127,9 +125,8 @@ export default function ThreeAM() {
         }
 
         .player-card {
-          background: rgba(11,16,38,.55);
+          background: rgba(11,16,38,.82);
           border: 1px solid rgba(201,205,224,.14);
-          backdrop-filter: blur(14px);
           border-radius: 14px;
           padding: 12px 14px;
         }
@@ -251,10 +248,6 @@ export default function ThreeAM() {
           .three-am-content {
             padding: 10px 12px;
           }
-          .scene-container {
-            margin: 8px 0;
-            border-radius: 12px;
-          }
           .title-section h1 {
             font-size: clamp(24px, 10vw, 36px);
           }
@@ -300,9 +293,6 @@ export default function ThreeAM() {
         @media (max-height: 600px) {
           .three-am-content {
             padding: 6px 10px;
-          }
-          .scene-container {
-            margin: 4px 0;
           }
           .title-section {
             margin-bottom: 4px !important;
@@ -385,44 +375,46 @@ export default function ThreeAM() {
         ))}
       </div>
 
+      {/* Full-screen scene background */}
+      <div className="scene-container" role="img" aria-label="Atmospheric night scene with rain and moonlight">
+        <div className="kenburns" aria-hidden="true" style={{ position: "absolute", inset: 0, backgroundImage: `url(${SCENE_IMAGE})`, backgroundSize: "cover", backgroundPosition: "center", animation: "kenburns 22s ease-in-out infinite", willChange: "transform" }} />
+        <div className="moonglow" aria-hidden="true" style={{ position: "absolute", left: "10%", top: "3%", width: "26%", height: "26%", borderRadius: "50%", background: "radial-gradient(circle, rgba(244,239,224,0.9) 0%, rgba(232,217,176,0.35) 45%, rgba(232,217,176,0) 75%)", mixBlendMode: "screen", animation: "moonPulse 6s ease-in-out infinite", pointerEvents: "none" }} />
+        <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(11,16,38,0) 30%, rgba(11,16,38,0.6) 65%, rgba(6,8,20,0.92) 100%)", pointerEvents: "none" }} />
+        <div aria-hidden="true" style={{ position: "absolute", inset: 0, pointerEvents: "none", mixBlendMode: "screen", opacity: 0.45 }}>
+          {drops.map((d, i) => (
+            <div key={i} className="drop" style={{ position: "absolute", left: `${d.left}%`, width: 1, height: 34, background: `linear-gradient(to bottom, rgba(201,205,224,0), rgba(201,205,224,.6))`, animation: `fall ${d.dur}s linear infinite`, animationDelay: `${d.delay}s` }} />
+          ))}
+        </div>
+      </div>
+
       <div className="three-am-content">
         {/* Header */}
-        <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.04em", color: COLORS.moon, opacity: 0.85 }}>
+        <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.04em", color: COLORS.moon, opacity: 0.85, marginBottom: "auto" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <span className="dot" aria-hidden="true" style={{ width: 6, height: 6, borderRadius: "50%", background: COLORS.amber, boxShadow: `0 0 8px ${COLORS.amber}`, animation: "pulseDot 2.2s ease-in-out infinite", display: "inline-block" }} />
             <span>{listenerCount !== null ? `${listenerCount} online` : "— online"}</span>
           </div>
           <nav aria-label="Streaming platforms" style={{ display: "flex", gap: 10, alignItems: "center" }}>
             {SPOTIFY_URL && (
-              <a href={SPOTIFY_URL} target="_blank" rel="noopener noreferrer" aria-label="Listen on Spotify" title="Listen on Spotify" style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 28, height: 28, borderRadius: "50%", background: "rgba(201,205,224,0.08)", opacity: 0.8 }}>
+              <a href={SPOTIFY_URL} target="_blank" rel="noopener noreferrer" aria-label="Listen on Spotify" style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 28, height: 28, borderRadius: "50%", background: "rgba(201,205,224,0.08)", opacity: 0.8 }}>
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="#1ED760"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.72-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z" /></svg>
               </a>
             )}
             {YT_MUSIC_URL && (
-              <a href={YT_MUSIC_URL} target="_blank" rel="noopener noreferrer" aria-label="Listen on YouTube Music" title="Listen on YouTube Music" style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 28, height: 28, borderRadius: "50%", background: "rgba(201,205,224,0.08)", opacity: 0.8 }}>
+              <a href={YT_MUSIC_URL} target="_blank" rel="noopener noreferrer" aria-label="Listen on YouTube Music" style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 28, height: 28, borderRadius: "50%", background: "rgba(201,205,224,0.08)", opacity: 0.8 }}>
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="#FF0000"><path d="M12 0C5.376 0 0 5.376 0 12s5.376 12 12 12 12-5.376 12-12S18.624 0 12 0zm0 19.104A7.1 7.1 0 1 1 19.104 12 7.109 7.109 0 0 1 12 19.104zm0-13.332A6.228 6.228 0 1 0 18.228 12 6.234 6.234 0 0 0 12 5.772zM9.684 15.84V8.16L16.2 12z" /></svg>
               </a>
             )}
           </nav>
         </header>
 
-        {/* Scene */}
-        <div className="scene-container" role="img" aria-label="Atmospheric night scene with rain and moonlight">
-          <div className="kenburns" aria-hidden="true" style={{ position: "absolute", inset: "-4%", backgroundImage: `url(${SCENE_IMAGE})`, backgroundSize: "cover", backgroundPosition: "center", animation: "kenburns 22s ease-in-out infinite", willChange: "transform" }} />
-          <div className="moonglow" aria-hidden="true" style={{ position: "absolute", left: "10%", top: "3%", width: "26%", height: "26%", borderRadius: "50%", background: "radial-gradient(circle, rgba(244,239,224,0.9) 0%, rgba(232,217,176,0.35) 45%, rgba(232,217,176,0) 75%)", mixBlendMode: "screen", animation: "moonPulse 6s ease-in-out infinite", pointerEvents: "none" }} />
-          <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: `radial-gradient(120% 90% at 22% 8%, rgba(74,66,112,0.18) 0%, rgba(11,16,38,0.35) 60%, rgba(6,8,20,0.55) 100%)`, pointerEvents: "none" }} />
-          <div aria-hidden="true" style={{ position: "absolute", inset: 0, pointerEvents: "none", mixBlendMode: "screen", opacity: 0.55 }}>
-            {drops.map((d, i) => (
-              <div key={i} className="drop" style={{ position: "absolute", left: `${d.left}%`, width: 1, height: 34, background: `linear-gradient(to bottom, rgba(201,205,224,0), rgba(201,205,224,.6))`, animation: `fall ${d.dur}s linear infinite`, animationDelay: `${d.delay}s` }} />
-            ))}
-          </div>
-          <div style={{ position: "absolute", left: 12, bottom: 10, zIndex: 3, fontFamily: "'Cormorant', serif", fontStyle: "italic", fontSize: "clamp(13px, 3.5vw, 17px)", color: COLORS.paper, opacity: 0.9, textShadow: "0 2px 10px rgba(0,0,0,.6)", maxWidth: "80%" }}>
-            the songs you play when no one can hear you
-          </div>
+        {/* Tagline */}
+        <div style={{ fontFamily: "'Cormorant', serif", fontStyle: "italic", fontSize: "clamp(14px, 3.5vw, 18px)", color: COLORS.paper, opacity: 0.9, textShadow: "0 2px 10px rgba(0,0,0,.6)", marginBottom: 12 }}>
+          the songs you play when no one can hear you
         </div>
 
         {/* Title */}
-        <div className="title-section" style={{ textAlign: "center", marginBottom: 8 }}>
+        <div className="title-section" style={{ textAlign: "center", marginBottom: 12 }}>
           <h1>3 AM</h1>
           <div className="subtitle">still awake · still listening</div>
         </div>
