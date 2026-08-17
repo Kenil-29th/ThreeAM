@@ -411,6 +411,23 @@ export default function ThreeAM() {
         </nav>
       </header>
 
+      {/* Full-screen tap target — tap anywhere to start on first visit */}
+      {!isPlaying && (
+        <div
+          onClick={togglePlay}
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 10,
+            cursor: "pointer",
+          }}
+          aria-label="Tap anywhere to play"
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") togglePlay(); }}
+        />
+      )}
+
       {/* Main content - pinned to bottom */}
       <div className="tam-content">
         {/* Title */}

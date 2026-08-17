@@ -20,7 +20,7 @@ export default function useYouTubePlayer(playlistId) {
   const playerRef = useRef(null);
   const rafRef = useRef(null);
   const tickRef = useRef(null);
-  const hasUserInteracted = useRef(false);
+  const pendingPlay = useRef(true); // always try to play as soon as ready
 
   const [isReady, setIsReady] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -30,7 +30,6 @@ export default function useYouTubePlayer(playlistId) {
   const [dur, setDur] = useState(0);
   const [apiTimedOut, setApiTimedOut] = useState(false);
 
-  // Keep the tick function in a ref so the rAF loop always uses the latest closure
   useEffect(() => {
     tickRef.current = () => {
       const p = playerRef.current;
@@ -68,12 +67,14 @@ export default function useYouTubePlayer(playlistId) {
           autoplay: 0,
           controls: 0,
           playsinline: 1,
+          origin: window.location.origin,
         },
         events: {
           onReady: () => {
             setIsReady(true);
-            // Try to autoplay — will work on desktop, may be blocked on mobile
-            playerRef.current.playVideo();
+            if (pendingPlay.current) {
+              playerRef.current.playVideo();
+            }
           },
           onError: () => {
             if (playerRef.current && playerRef.current.nextVideo) {
@@ -83,7 +84,7 @@ export default function useYouTubePlayer(playlistId) {
           onStateChange: (e) => {
             if (e.data === window.YT.PlayerState.PLAYING) {
               setIsPlaying(true);
-              hasUserInteracted.current = true;
+              pendingPlay.current = false;
               const data = playerRef.current.getVideoData?.();
               setTrackName(data?.title || "Now playing");
               if (data?.video_id) {
@@ -94,7 +95,6 @@ export default function useYouTubePlayer(playlistId) {
               setIsPlaying(false);
               stopTick();
             } else if (e.data === window.YT.PlayerState.ENDED) {
-              // Auto-advance to next track
               if (playerRef.current && playerRef.current.nextVideo) {
                 playerRef.current.nextVideo();
               }
@@ -108,7 +108,7 @@ export default function useYouTubePlayer(playlistId) {
 
     const timeoutId = setTimeout(() => {
       if (!cancelled && !playerRef.current) setApiTimedOut(true);
-    }, 8000);
+    }, 10000);
 
     return () => {
       cancelled = true;
@@ -118,19 +118,26 @@ export default function useYouTubePlayer(playlistId) {
   }, [playlistId, startTick, stopTick]);
 
   const togglePlay = useCallback(() => {
-    if (!isReady || !playerRef.current) return;
-    if (isPlaying) {
-      playerRef.current.pauseVideo();
-    } else {
-      playerRef.current.playVideo();
-      hasUserInteracted.current = true;
+    const p = playerRef.current;
+    if (!p) {
+      // Player not created yet, just mark pending
+      pendingPlay.current = true;
+      setTrackName("Loading…");
+      return;
     }
-  }, [isReady, isPlaying]);
+    // Player exists — call play/pause directly
+    if (isPlaying) {
+      p.pauseVideo();
+    } else {
+      p.playVideo();
+    }
+  }, [isPlaying]);
 
   const nextTrack = useCallback(() => {
-    if (!isReady || !playerRef.current) return;
-    playerRef.current.nextVideo();
-  }, [isReady]);
+    if (playerRef.current) {
+      playerRef.current.nextVideo();
+    }
+  }, []);
 
   const progressPct = dur ? (cur / dur) * 100 : 0;
 
