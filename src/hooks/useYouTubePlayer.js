@@ -20,10 +20,11 @@ export default function useYouTubePlayer(playlistId) {
   const playerRef = useRef(null);
   const rafRef = useRef(null);
   const tickRef = useRef(null);
+  const hasUserInteracted = useRef(false);
 
   const [isReady, setIsReady] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [trackName, setTrackName] = useState("Tuning in…");
+  const [trackName, setTrackName] = useState("Tap to play");
   const [thumbnail, setThumbnail] = useState(null);
   const [cur, setCur] = useState(0);
   const [dur, setDur] = useState(0);
@@ -64,11 +65,16 @@ export default function useYouTubePlayer(playlistId) {
         playerVars: {
           listType: "playlist",
           list: playlistId,
-          autoplay: 1,
+          autoplay: 0,
           controls: 0,
+          playsinline: 1,
         },
         events: {
-          onReady: () => setIsReady(true),
+          onReady: () => {
+            setIsReady(true);
+            // Try to autoplay — will work on desktop, may be blocked on mobile
+            playerRef.current.playVideo();
+          },
           onError: () => {
             if (playerRef.current && playerRef.current.nextVideo) {
               playerRef.current.nextVideo();
@@ -77,6 +83,7 @@ export default function useYouTubePlayer(playlistId) {
           onStateChange: (e) => {
             if (e.data === window.YT.PlayerState.PLAYING) {
               setIsPlaying(true);
+              hasUserInteracted.current = true;
               const data = playerRef.current.getVideoData?.();
               setTrackName(data?.title || "Now playing");
               if (data?.video_id) {
@@ -86,6 +93,11 @@ export default function useYouTubePlayer(playlistId) {
             } else if (e.data === window.YT.PlayerState.PAUSED) {
               setIsPlaying(false);
               stopTick();
+            } else if (e.data === window.YT.PlayerState.ENDED) {
+              // Auto-advance to next track
+              if (playerRef.current && playerRef.current.nextVideo) {
+                playerRef.current.nextVideo();
+              }
             }
           },
         },
@@ -96,7 +108,7 @@ export default function useYouTubePlayer(playlistId) {
 
     const timeoutId = setTimeout(() => {
       if (!cancelled && !playerRef.current) setApiTimedOut(true);
-    }, 6000);
+    }, 8000);
 
     return () => {
       cancelled = true;
@@ -107,8 +119,12 @@ export default function useYouTubePlayer(playlistId) {
 
   const togglePlay = useCallback(() => {
     if (!isReady || !playerRef.current) return;
-    if (isPlaying) playerRef.current.pauseVideo();
-    else playerRef.current.playVideo();
+    if (isPlaying) {
+      playerRef.current.pauseVideo();
+    } else {
+      playerRef.current.playVideo();
+      hasUserInteracted.current = true;
+    }
   }, [isReady, isPlaying]);
 
   const nextTrack = useCallback(() => {
