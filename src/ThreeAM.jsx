@@ -414,7 +414,8 @@ export default function ThreeAM() {
       {/* Full-screen tap target — tap anywhere to start on first visit */}
       {!isPlaying && (
         <div
-          onClick={togglePlay}
+          onClick={(e) => { e.preventDefault(); togglePlay(); }}
+          onTouchEnd={(e) => { e.preventDefault(); togglePlay(); }}
           style={{
             position: "absolute",
             inset: 0,
@@ -506,8 +507,10 @@ export default function ThreeAM() {
         </div>
       </div>
 
-      {/* Hidden YT player */}
-      <div id="yt-audio-target" style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }} />
+      {/* Hidden YT player — sized 200x200 for Android compatibility but visually hidden */}
+      <div style={{ position: "absolute", top: 0, left: 0, width: 200, height: 200, overflow: "hidden", opacity: 0.01, pointerEvents: "none", zIndex: -1 }}>
+        <div id="yt-audio-target" />
+      </div>
     </div>
   );
 }
